@@ -1,0 +1,4 @@
+dist
+node_modules
+.DS_Store
+test/vosk-model-small-en-us-0.15
