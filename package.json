@@ -6,6 +6,12 @@
   "engines": {
     "node": ">=12"
   },
+  "bin": {
+    "word-timings": "./dist/word-timings.js"
+  },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc"
   },
