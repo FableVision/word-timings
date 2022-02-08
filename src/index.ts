@@ -1,13 +1,14 @@
-import './vosk';
+/// <ref="./vosk" />
+/// <ref="./ffmpeg" />
 import vosk from 'vosk';
 import fs from "fs-extra";
-import { Readable } from "stream";
-import wav from "wav";
+import ffmpeg from 'ffmpeg-cli';
 import { Command } from 'commander';
 import path from 'path';
 import JSON5 from 'json5';
 import glob from 'fast-glob';
 import { filterAsync, HashCache, ProjectConfig, CompactTimings, OutputData } from './utils';
+import { spawn } from 'child_process';
 
 async function main()
 {
@@ -55,7 +56,14 @@ async function main()
         let outFileContent: OutputData;
         if (await fs.pathExists(outPath))
         {
-            outFileContent = JSON.parse(await fs.readFile(outPath, 'utf8'));
+            try
+            {
+                outFileContent = JSON.parse(await fs.readFile(outPath, 'utf8'));
+            }
+            catch (_e)
+            {
+                outFileContent = {};
+            }
         }
         else
         {
@@ -64,7 +72,7 @@ async function main()
 
         const changed = await filterAsync(
             (await Promise.all(output.globs.map(g => glob(g, {cwd})))).flat(),
-            (file) => !outFileContent[path.basename(file, '.wav')] || cache.isDifferent(file, cwd)
+            (file) => cache.isDifferent(file, cwd) || !outFileContent[path.basename(file, '.wav')]
         );
 
         for (const file of changed)
@@ -91,30 +99,35 @@ async function main()
 async function getTimings(file: string, model: vosk.Model)
 {
     return new Promise<CompactTimings>(async (resolve, reject) => {
-        const wfReader = new wav.Reader();
-        const wfReadable = new Readable().wrap(wfReader);
+        const sampleRate = 16000;
+        const rec = new vosk.Recognizer({ model: model, sampleRate: sampleRate });
+        rec.setWords(true);
 
-        wfReader.on('format', async ({ audioFormat, sampleRate, channels }) =>
+        const ffmpeg_run = spawn(ffmpeg.path, ['-loglevel', 'quiet', '-i', file,
+            '-ar', String(sampleRate), '-ac', '1',
+            '-f', 's16le', '-bufsize', String(4000), '-']);
+
+        ffmpeg_run.on('error', (error) => {
+            console.log(error);
+            reject(`Failure on ${file}: ` + error.message);
+        });
+
+        ffmpeg_run.stdout.on('data', (stdout) =>
         {
-            const rec = new vosk.Recognizer({ model: model, sampleRate: sampleRate });
-            // rec.setMaxAlternatives(3);
-            rec.setWords(true);
-            if (audioFormat != 1 || channels != 1)
-            {
-                reject(`Audio file ${file} must be WAV format mono PCM.`);
-                rec.free();
-                return;
-            }
-            // feed in individual chunks of the wav file
-            for await (const data of wfReadable)
-            {
-                await rec.acceptWaveformAsync(data);
-            }
+            rec.acceptWaveform(stdout);
+        });
+
+        ffmpeg_run.stdout.on('end', () => {
             const result = rec.finalResult();
             rec.free();
 
             const out: CompactTimings = [];
             let lastEnd = 0;
+            if (!result.result)
+            {
+                reject(`Bad result for ${file}: JSON.stringify(result)`);
+                return;
+            }
             for (const word of result.result)
             {
                 // if word starts when the last one ended, just put in the ending time
@@ -130,10 +143,9 @@ async function getTimings(file: string, model: vosk.Model)
                 lastEnd = word.end;
             }
 
+            console.log(`${file}: ${result.result.map(w => w.word).join(' ')}`);
             resolve(out);
         });
-
-        fs.createReadStream(file, { 'highWaterMark': 4096 }).pipe(wfReader);
     });
 }
 
