@@ -72,7 +72,7 @@ async function main()
 
         const changed = await filterAsync(
             (await Promise.all(output.globs.map(g => glob(g, {cwd})))).flat(),
-            (file) => cache.isDifferent(file, cwd) || !outFileContent[path.basename(file, '.wav')]
+            async (file) => (await cache.isDifferent(file, cwd)) || !outFileContent[path.basename(file, '.wav')]
         );
 
         for (const file of changed)
