@@ -87,7 +87,21 @@ async function main()
             }
         }
 
-        await fs.writeFile(outPath, JSON.stringify(outFileContent, null, config.pretty ? '\t' : undefined));
+        let outputText: string;
+        if (config.pretty)
+        {
+            let outputLines = [];
+            for (const filename in outFileContent)
+            {
+                outputLines.push(`"${filename}": [${outFileContent[filename].map(t => JSON.stringify(t)).join(', ')}]`);
+            }
+            outputText = `{\n\t${outputLines.join(',\n\t')}\n}`;
+        }
+        else
+        {
+            outputText = JSON.stringify(outFileContent);
+        }
+        await fs.writeFile(outPath, outputText);
     }
 
     model.free();
@@ -125,7 +139,7 @@ async function getTimings(file: string, model: vosk.Model)
             let lastEnd = 0;
             if (!result.result)
             {
-                reject(`Bad result for ${file}: JSON.stringify(result)`);
+                reject(`Bad result for ${path.relative(process.cwd(), file)}: JSON.stringify(result)`);
                 return;
             }
             for (const word of result.result)
@@ -143,7 +157,7 @@ async function getTimings(file: string, model: vosk.Model)
                 lastEnd = word.end;
             }
 
-            console.log(`${file}: ${result.result.map(w => w.word).join(' ')}`);
+            console.log(`${path.relative(process.cwd(), file)}: ${result.result.map(w => w.word).join(' ')}`);
             resolve(out);
         });
     });
