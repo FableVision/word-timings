@@ -2,19 +2,20 @@
   "name": "@fablevision/word-timings",
   "version": "0.6.1",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "engines": {
     "node": ">=12"
   },
   "bin": {
-    "word-timings": "./dist/index.js"
+    "word-timings": "./bin/index.js"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "bin/"
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node ./dist/index.js -c ./test/test.json5"
+    "test": "node ./bin/index.js -c ./test/test.json5"
   },
   "author": "Andrew Start",
   "license": "MIT",
