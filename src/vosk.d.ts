@@ -38,7 +38,7 @@ declare module 'vosk'
 
     export class Recognizer
     {
-        constructor(opts: {model: Model, sampleRate: number});
+        constructor(opts: {model: Model, sampleRate: number, grammar?: string[]});
 
         public setMaxAlternatives(count: number): void;
         /** Configures recognizer to output words with times */
