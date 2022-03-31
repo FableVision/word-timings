@@ -159,11 +159,13 @@ export default class WordTimingGenerator
         return new Promise<CompactTimings>(async (resolve, reject) =>
         {
             const sampleRate = 16000;
-            const rec = new vosk.Recognizer({
+            const opts = {
                 model: model,
                 sampleRate: sampleRate,
                 grammar: this.expectedOutput.has(id) ? this.expectedOutput.get(id)!.split(' ') : undefined,
-            });
+            };
+            if (!opts.grammar) delete opts.grammar;
+            const rec = new vosk.Recognizer(opts);
             rec.setWords(true);
 
             const ffmpeg_run = spawn(ffmpeg.path, ['-loglevel', 'quiet', '-i', file,
