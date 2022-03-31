@@ -18,11 +18,6 @@ export default class WordTimingGenerator
      * If data of each parsed line should be output.
      */
     public logLineOutput = true;
-    /**
-     * Optionally, expected output for each audio file:
-     * keys are audio filenames, values are the script for that line.
-     */
-    public expectedOutput: Map<string, string> = new Map();
 
     public static cli()
     {
@@ -137,7 +132,7 @@ export default class WordTimingGenerator
             {
                 try
                 {
-                    outFileContent[path.basename(file, '.wav')] = await this.getTimings(path.resolve(cwd, file), model, file);
+                    outFileContent[path.basename(file, '.wav')] = await this.getTimings(path.resolve(cwd, file), model);
                 }
                 catch (e)
                 {
@@ -154,18 +149,12 @@ export default class WordTimingGenerator
         await cache.save();
     }
 
-    private async getTimings(file: string, model: vosk.Model, id: string)
+    private async getTimings(file: string, model: vosk.Model)
     {
         return new Promise<CompactTimings>(async (resolve, reject) =>
         {
             const sampleRate = 16000;
-            const opts = {
-                model: model,
-                sampleRate: sampleRate,
-                grammar: this.expectedOutput.has(id) ? this.expectedOutput.get(id)!.split(' ') : undefined,
-            };
-            if (!opts.grammar) delete opts.grammar;
-            const rec = new vosk.Recognizer(opts);
+            const rec = new vosk.Recognizer({model: model, sampleRate: sampleRate});
             rec.setWords(true);
 
             const ffmpeg_run = spawn(ffmpeg.path, ['-loglevel', 'quiet', '-i', file,
