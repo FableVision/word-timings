@@ -10,6 +10,8 @@ import glob from 'fast-glob';
 import { filterAsync, HashCache, ProjectConfig, CompactTimings, OutputData } from './utils';
 import { spawn } from 'child_process';
 
+export { ProjectConfig, CompactTimings, OutputData } from './utils';
+
 export default class WordTimingGenerator
 {
     /**
