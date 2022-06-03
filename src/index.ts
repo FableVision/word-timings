@@ -181,7 +181,7 @@ export default class WordTimingGenerator
                 let lastEnd = 0;
                 if (!result.result)
                 {
-                    reject(`Bad result for ${path.relative(process.cwd(), file)}: JSON.stringify(result)`);
+                    reject(`Bad result for ${path.relative(process.cwd(), file)}: ${JSON.stringify(result)}`);
                     return;
                 }
                 for (const word of result.result)
