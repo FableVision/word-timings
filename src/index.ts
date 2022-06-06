@@ -136,7 +136,9 @@ export default class WordTimingGenerator
                 }
                 catch (e)
                 {
-                    throw (e as any).message || e;
+                    console.log((e as any).message || e);
+                    outFileContent[path.basename(file, '.wav')] = [];
+                    // throw (e as any).message || e;
                 }
             }
 

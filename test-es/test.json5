@@ -1,0 +1,11 @@
+{
+    model: './test-es/vosk-model-small-es-0.22',
+    cache: 'test-es/.cache',
+    pretty: true,
+    outputs: [
+        {
+            file: 'test-es/output.json',
+            globs: ['test-es/*.wav'],
+        },
+    ],
+}

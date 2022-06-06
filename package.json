@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node ./bin/index.js -c ./test/test.json5"
+    "test": "node ./bin/index.js -c ./test/test.json5",
+    "test-es": "node ./bin/index.js -c ./test-es/test.json5"
   },
   "author": "Andrew Start",
   "license": "MIT",
